@@ -1,0 +1,433 @@
+*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  :root {
+    --bg-color: #000000;
+    
+    /* After Effects Kinetic Syntax Colors */
+    --c-kw: #ff5370;      /* Control keyword (vivid coral red) */
+    --c-type: #569cd6;    /* Keywords / Types (blue) */
+    --c-fn: #dcdcaa;      /* Functions (golden yellow) */
+    --c-var: #9cdcfe;     /* Variables (soft cyan) */
+    --c-str: #ce9178;     /* Strings (warm amber) */
+    --c-num: #b5cea8;     /* Numbers (light sage) */
+    --c-com: #7ee787;     /* Comments (vibrant GitHub lime green, glowing) */
+    --c-punc: #999999;    /* Punctuation (subtle gray) */
+    --c-bracket: #ffd700; /* Gold brackets */
+    --c-cursor: #ff5370;  /* Vivid glowing cursor block */
+    --c-gutter: #363636;  /* Inactive line number color */
+  }
+
+  html, body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: var(--bg-color);
+    font-family: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
+    user-select: none;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Fullscreen Viewport */
+  #viewport {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    background: var(--bg-color);
+    overflow: hidden;
+  }
+
+  /* Camera Container */
+  #camera {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    transform-origin: 0 0;
+    will-change: transform;
+    pointer-events: none;
+  }
+
+  /* Code Block Container: Left-aligned lines, centrally positioned */
+  #rows-container {
+    position: absolute;
+    left: clamp(16px, 3.5vw, 60px);
+    top: 0;
+    width: max-content;
+    min-width: calc(100vw - clamp(32px, 7vw, 120px));
+    padding: 80px 0 60vh 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+  }
+
+  /* Line Row: Line number + code, left-aligned, responsive font */
+  .row {
+    display: flex;
+    align-items: baseline;
+    justify-content: flex-start;
+    text-align: left;
+    min-height: 2.2em;
+    padding: 6px 0;
+    font-size: clamp(30px, 4.5vw, 52px);
+    font-weight: 600;
+    line-height: 1.6;
+    letter-spacing: 0.015em;
+    white-space: pre;
+    opacity: 0.16;
+    filter: blur(3px);
+    transform: scale(0.97);
+    transform-origin: left center;
+    transition:
+      opacity 0.55s cubic-bezier(0.2, 0.8, 0.2, 1),
+      filter 0.55s cubic-bezier(0.2, 0.8, 0.2, 1),
+      transform 0.55s cubic-bezier(0.2, 0.8, 0.2, 1);
+    will-change: transform, opacity, filter;
+  }
+
+  /* Line Numbers in Gutter */
+  .ln {
+    flex: none;
+    width: clamp(48px, 6vw, 75px);
+    padding-right: clamp(18px, 2.5vw, 36px);
+    text-align: right;
+    color: var(--c-gutter);
+    font-size: clamp(14px, 2vw, 20px);
+    font-weight: 400;
+    user-select: none;
+    transition: color 0.35s ease, opacity 0.35s ease;
+  }
+
+  /* Active Line: Crisp, luminous and dead-center */
+  .row.active-line {
+    opacity: 1 !important;
+    filter: blur(0px) !important;
+    transform: scale(1.0) !important;
+  }
+
+  .row.active-line .ln {
+    color: #e2e8f0 !important;
+    font-weight: 600;
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.35);
+  }
+
+  /* Past Line */
+  .row.past-line {
+    opacity: 0.55;
+    filter: blur(0.6px);
+    transform: scale(0.99);
+  }
+
+  .row.past-line .ln {
+    color: #666666;
+  }
+
+  /* Code Line Container */
+  .code-line {
+    display: flex;
+    align-items: baseline;
+    justify-content: flex-start;
+    text-align: left;
+    white-space: pre;
+    position: relative;
+  }
+
+  /* Word Tokens - Anchored to left bottom so zoom NEVER expands backwards into gutter */
+  .tok {
+    display: inline-block;
+    vertical-align: baseline;
+    opacity: 0.6;
+    transform: scale(1.0) translateY(0);
+    transform-origin: left bottom;
+    transition:
+      transform 0.35s cubic-bezier(0.2, 0.9, 0.3, 1.2),
+      text-shadow 0.32s ease,
+      filter 0.32s ease,
+      opacity 0.32s ease,
+      margin 0.32s ease,
+      color 0.4s ease;
+    will-change: transform, text-shadow, filter, margin;
+  }
+
+  .row.active-line .tok {
+    opacity: 0.72;
+  }
+
+  /* Normal Active Word Zoom - scale + subtle glow */
+  .tok.word-zoom {
+    opacity: 1 !important;
+    transform: scale(1.08) translateY(-2px) !important;
+    margin-right: clamp(14px, 1.8vw, 24px) !important;
+    text-shadow: 0 0 20px currentColor !important;
+    filter: brightness(1.25) !important;
+    z-index: 20;
+    position: relative;
+  }
+
+  /* Syntax Color Palette (Normal Sections) */
+  .c-kw   { color: var(--c-kw); }      /* coral/red */
+  .c-type { color: var(--c-type); }    /* blue */
+  .c-fn   { color: var(--c-fn); }      /* yellow */
+  .c-var  { color: var(--c-var); }     /* cyan */
+  .c-str  { color: var(--c-str); }     /* orange */
+  .c-num  { color: var(--c-num); }     /* sage */
+  .c-com  { color: var(--c-com); font-style: italic; } /* green */
+  .c-punc { color: var(--c-punc); }    /* gray */
+  .c-b    { color: var(--c-bracket); } /* gold */
+
+  /* ───────────────────────────────────────────────────────────────────────────
+     HACKED / GLITCH / ERROR RED STYLES (Cyberpunk Red Corrupted Mode)
+     ─────────────────────────────────────────────────────────────────────────── */
+  .row.glitch-row .tok {
+    color: #ff3355;
+  }
+  .row.glitch-row.active-line .tok {
+    color: #ff4d6d;
+    opacity: 0.85;
+  }
+
+  .row.glitch-row .tok.c-kw      { color: #ff0033; font-weight: 700; }
+  .row.glitch-row .tok.c-type    { color: #ff5577; }
+  .row.glitch-row .tok.c-fn      { color: #ff1a4b; }
+  .row.glitch-row .tok.c-var     { color: #ffffff; }
+  .row.glitch-row .tok.c-str     { color: #ff99aa; }
+  .row.glitch-row .tok.c-b       { color: #ff0033; font-weight: 700; }
+  .row.glitch-row .tok.c-punc    { color: #b30024; }
+  .row.glitch-row .tok.c-com     { color: #ff0033; font-weight: 700; text-shadow: 0 0 8px #ff0033; }
+
+  .row.glitch-row.active-line .ln {
+    color: #ff0033 !important;
+    text-shadow: 0 0 14px rgba(255, 0, 51, 0.9) !important;
+  }
+
+  /* Glitch Word Zoom: Luminous blood-red corrupted glow */
+  .row.glitch-row .tok.word-zoom {
+    color: #ffffff !important;
+    transform: scale(1.07) translateY(-3px) !important;
+    margin-right: clamp(16px, 2.0vw, 26px) !important;
+    text-shadow:
+      0 0 18px #ff0033,
+      0 0 45px #ff0033,
+      0 0 90px #ff0033 !important;
+    filter: brightness(1.55) contrast(1.2) !important;
+    z-index: 30;
+  }
+
+  /* 
+    Violent Glitch Shock Burst (~1.2s at beginning of Chorus Climax):
+    Chromatic Aberration (RGB Shift) + Micro-Shake
+  */
+  .row.glitch-row.active-line.violent-glitch {
+    animation: glitchLineShake 0.25s ease-in-out infinite alternate !important;
+  }
+
+  .row.glitch-row.active-line.violent-glitch .tok.word-zoom {
+    animation: glitchRGB 0.16s infinite alternate !important;
+  }
+
+  @keyframes glitchRGB {
+    0% {
+      transform: scale(1.07) translate(0, -3px);
+      text-shadow: -3px 0 #00ffff, 3px 0 #ff0033, 0 0 20px #ff0033, 0 0 50px #ff0033;
+    }
+    33% {
+      transform: scale(1.08) translate(-2px, -4px);
+      text-shadow: 4px 0 #00ffff, -4px 0 #ff0033, 0 0 35px #ff0033, 0 0 75px #ff0033;
+    }
+    66% {
+      transform: scale(1.06) translate(2px, -2px);
+      text-shadow: -4px 0 #00ffff, 4px 0 #ff0033, 0 0 25px #ff0033, 0 0 60px #ff0033;
+    }
+    100% {
+      transform: scale(1.07) translate(-1px, -3px);
+      text-shadow: 3px 0 #00ffff, -3px 0 #ff0033, 0 0 40px #ff0033, 0 0 80px #ff0033;
+    }
+  }
+
+  @keyframes glitchLineShake {
+    0%   { transform: scale(1.0) translate(0, 0); }
+    25%  { transform: scale(1.008) translate(-2px, 0.8px); }
+    50%  { transform: scale(0.996) translate(2px, -0.8px); }
+    75%  { transform: scale(1.008) translate(-1px, -0.6px); }
+    100% { transform: scale(1.0) translate(1px, 0.6px); }
+  }
+
+  /* Glowing Neon Block Cursor */
+  .neon-cursor {
+    display: inline-block;
+    width: 0.50em;
+    height: 1.15em;
+    background: var(--c-cursor);
+    box-shadow:
+      0 0 10px var(--c-cursor),
+      0 0 25px rgba(255, 83, 112, 0.9),
+      0 0 50px rgba(255, 83, 112, 0.6);
+    border-radius: 2px;
+    vertical-align: text-bottom;
+    margin-left: 8px;
+    margin-right: 6px;
+    opacity: 1;
+    position: relative;
+    z-index: 25;
+    animation: cursorPulse 0.8s cubic-bezier(0.4, 0, 0.6, 1) infinite alternate;
+    transition: background 0.4s ease, box-shadow 0.4s ease;
+  }
+
+  /* Hacked Cursor: Deep Red Laser */
+  body.hacked-mode .neon-cursor {
+    background: #ff0033;
+    box-shadow:
+      0 0 12px #ff0033,
+      0 0 30px rgba(255, 0, 51, 1),
+      0 0 60px rgba(255, 0, 51, 0.8);
+  }
+
+  .neon-cursor.typing {
+    animation: none;
+    opacity: 1;
+  }
+
+  @keyframes cursorPulse {
+    0% { opacity: 1; transform: scaleY(1); }
+    100% { opacity: 0.3; transform: scaleY(0.92); }
+  }
+
+  /* Fullscreen Black Curtain for End-of-Song Transition */
+  #black-curtain {
+    position: absolute;
+    inset: 0;
+    background: #000000;
+    opacity: 0;
+    pointer-events: none;
+    z-index: 1000;
+    transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  #black-curtain.fade-black {
+    opacity: 1;
+  }
+
+  /* Active Line Comment Glow - removed */
+  .row.active-line .tok.c-com {
+    text-shadow: none;
+  }
+  .row.active-line .tok.c-com.word-zoom {
+    text-shadow: none !important;
+  }
+
+  /* VS Code File Tab Card - Anchored directly above Line 1 in the lyrics stream */
+  .file-tab-card {
+    display: inline-flex;
+    align-items: center;
+    gap: 0;
+    background: linear-gradient(180deg, #1a1a1e 0%, #111113 60%, #000000 100%);
+    border: 1px solid rgba(60, 60, 65, 0.6);
+    border-top: 2px solid #007acc;
+    border-bottom: none;
+    border-radius: 6px 6px 0 0;
+    padding: 0 14px;
+    margin-bottom: 0;
+    margin-left: calc(clamp(48px, 6vw, 75px) + clamp(18px, 2.5vw, 36px));
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'JetBrains Mono', monospace;
+    font-size: clamp(13px, 1.8vw, 15px);
+    color: #ffffff;
+    box-shadow:
+      0 -2px 12px rgba(0, 122, 204, 0.08),
+      inset 0 1px 0 rgba(255,255,255,0.03);
+    user-select: none;
+    pointer-events: none;
+    transition: border-top-color 0.4s ease, border-color 0.4s ease;
+  }
+
+  .file-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px 8px;
+  }
+
+  .tab-separator {
+    color: #858585;
+    padding: 0 2px;
+  }
+
+  body.hacked-mode .file-tab-card {
+    border-top-color: #ff0033;
+    border-color: rgba(255, 0, 51, 0.3);
+    box-shadow:
+      0 -2px 12px rgba(255, 0, 51, 0.1),
+      inset 0 1px 0 rgba(255,255,255,0.03);
+  }
+
+  .file-tab-card .html-icon {
+    flex-shrink: 0;
+    width: 15px;
+    height: 15px;
+    object-fit: contain;
+  }
+
+    .file-tab-card .js-icon {
+    flex-shrink: 0;
+    width: 15px;
+    height: 15px;
+    object-fit: contain;
+  }
+
+    .file-tab-card .css-icon {
+    flex-shrink: 0;
+    width: 15px;
+    height: 15px;
+    object-fit: contain;
+  }
+
+  .file-tab-card .mp3-icon {
+    flex-shrink: 0;
+    width: 15px;
+    height: 15px;
+    object-fit: contain;
+}
+
+  .file-tab-card .tab-title {
+    font-size: clamp(13px, 1.8vw, 15px);
+    font-weight: 400;
+    letter-spacing: 0.01em;
+  }
+
+  .file-tab-card .tab-close {
+    font-size: 16px;
+    color: #858585;
+    margin-left: 6px;
+    line-height: 1;
+  }
+
+  /* HUD Speed Badge */
+  #speed-badge {
+    position: fixed;
+    top: 20px;
+    right: clamp(12px, 2.5vw, 24px);
+    font-family: 'JetBrains Mono', Consolas, monospace;
+    font-size: clamp(11px, 1.8vw, 13px);
+    font-weight: 700;
+    color: #ff5370;
+    background: rgba(15, 15, 20, 0.88);
+    border: 1px solid rgba(255, 83, 112, 0.4);
+    box-shadow: 0 0 16px rgba(255, 83, 112, 0.25);
+    border-radius: 6px;
+    padding: clamp(4px, 1vw, 6px) clamp(10px, 1.5vw, 14px);
+    letter-spacing: 0.05em;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-4px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    z-index: 9999;
+  }
+  #speed-badge.show {
+    opacity: 1;
+    transform: translateY(0);
+  }
