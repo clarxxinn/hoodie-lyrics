@@ -7,7 +7,7 @@
   :root {
     --bg-color: #000000;
     
-    /* After Effects Kinetic Syntax Colors */
+    /* After Effects Syntax Colors */
     --c-kw: #ff5370;      /* Control keyword (vivid coral red) */
     --c-type: #569cd6;    /* Keywords / Types (blue) */
     --c-fn: #dcdcaa;      /* Functions (golden yellow) */
